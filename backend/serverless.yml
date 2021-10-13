@@ -26,7 +26,8 @@ provider:
   iamRoleStatements:
     - Effect: Allow
       Action:
-        - dynamodb:Scan
+        - dynamodb:Scan #GetEquipmentList
+        - dynamodb:PutItem #CreateEquipment
       Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.EQUIPMENT_TABLE}
 
 custom:
@@ -35,17 +36,27 @@ custom:
     includeModules: true
 
 functions:
+  # Get list of equipment
   GetEquipmentList:
     handler: src/lambda/http/getEquipmentList.handler
     events:
       - http:
           method: get
-          path: equipmentlist
+          path: equipment
+          cors: true
+
+  # Create a new equipment
+  CreateEquipment:
+    handler: src/lambda/http/createEquipment.handler
+    events:
+      - http:
+          method: post
+          path: equipment
           cors: true
 
 resources:
   Resources:
-    # TODO: Create a DynamoDB table with local secondary index and a composite key
+    # Create a DynamoDB table with local secondary index and a composite key
     EquipmentTable:
       Type: AWS::DynamoDB::Table
       Properties:
