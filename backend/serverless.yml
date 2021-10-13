@@ -4,11 +4,6 @@ service:
 #app: your-app-name
 #org: your-org-name
 
-custom:
-  webpack:
-    webpackConfig: ./webpack.config.js
-    includeModules: true
-
 # Add the serverless-webpack plugin
 plugins:
   - serverless-webpack
@@ -16,15 +11,64 @@ plugins:
 provider:
   name: aws
   runtime: nodejs12.x
+
+  stage: ${opt:stage, 'dev'}
+  region: ${opt:region, 'us-west-1'}
+
   apiGateway:
     minimumCompressionSize: 1024 # Enable gzip compression for responses > 1 KB
+
   environment:
     AWS_NODEJS_CONNECTION_REUSE_ENABLED: 1
+    EQUIPMENT_TABLE: Equipment-${self:provider.stage}
+    EQUIPMENT_CREATEDAT_INDEX: CreatedAtIndex
+
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - dynamodb:Scan
+      Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.EQUIPMENT_TABLE}
+
+custom:
+  webpack:
+    webpackConfig: ./webpack.config.js
+    includeModules: true
 
 functions:
-  hello:
-    handler: handler.hello
+  GetEquipmentList:
+    handler: src/lambda/http/getEquipmentList.handler
     events:
       - http:
           method: get
-          path: hello
+          path: equipmentlist
+          cors: true
+
+resources:
+  Resources:
+    # TODO: Create a DynamoDB table with local secondary index and a composite key
+    EquipmentTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        AttributeDefinitions:
+          - AttributeName: userId
+            AttributeType: S
+          - AttributeName: equipmentId
+            AttributeType: S
+          - AttributeName: createdAt
+            AttributeType: S
+        KeySchema:
+          - AttributeName: userId
+            KeyType: HASH # Partition key
+          - AttributeName: equipmentId
+            KeyType: RANGE # Sort key
+        BillingMode: PAY_PER_REQUEST
+        TableName: ${self:provider.environment.EQUIPMENT_TABLE}
+        LocalSecondaryIndexes:
+          - IndexName: ${self:provider.environment.EQUIPMENT_CREATEDAT_INDEX}
+            KeySchema:
+              - AttributeName: userId
+                KeyType: HASH
+              - AttributeName: createdAt
+                KeyType: RANGE
+            Projection:
+              ProjectionType: ALL # What attributes will be copied to an index
