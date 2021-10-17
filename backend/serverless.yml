@@ -36,6 +36,10 @@ custom:
     includeModules: true
 
 functions:
+  # Handle authorization
+  Auth:
+    handler: src/lambda/auth/auth0Authorizer.handler
+
   # Get list of equipment
   GetEquipmentList:
     handler: src/lambda/http/getEquipmentList.handler
