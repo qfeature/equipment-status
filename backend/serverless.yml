@@ -22,6 +22,8 @@ provider:
     AWS_NODEJS_CONNECTION_REUSE_ENABLED: 1
     EQUIPMENT_TABLE: Equipment-${self:provider.stage}
     EQUIPMENT_CREATEDAT_INDEX: CreatedAtIndex
+    ATTACHMENT_S3_BUCKET: quyen-serverless-equipment-status-images-${self:provider.stage} # Bucket to store attached image
+    SIGNED_URL_EXPIRATION: 300
 
   iamRoleStatements:
     - Effect: Allow
@@ -48,6 +50,7 @@ functions:
           method: get
           path: equipment
           cors: true
+          authorizer: Auth
 
   # Create a new equipment
   CreateEquipment:
@@ -57,6 +60,7 @@ functions:
           method: post
           path: equipment
           cors: true
+          authorizer: Auth
 
 resources:
   Resources:
