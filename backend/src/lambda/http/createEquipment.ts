@@ -1,42 +1,40 @@
-import { APIGatewayProxyHandler, APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda'
+import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda'
 import 'source-map-support/register'
-import * as AWS from 'aws-sdk'
-//import { CreateEquipmentRequest } from '../../requests/CreateEquipmentRequest'
-import * as uuid from 'uuid'
+import * as middy from 'middy'
+import { cors, httpErrorHandler } from 'middy/middlewares'
+import { CreateEquipmentRequest } from '../../requests/CreateEquipmentRequest'
+import { getUserId } from '../utils'
+import { createEquipment /*, timeInMs, setLatencyMetric*/ } from '../../helpers/equipment'
 
-const docClient = new AWS.DynamoDB.DocumentClient()
-const eqTable = process.env.EQUIPMENT_TABLE
+import { createLogger } from '../../utils/logger'
+const logger = createLogger('createEquipment')
 
-export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
-  console.log('Processing event:', event)
+//import * as AWS from 'aws-sdk'
+//const docClient = new AWS.DynamoDB.DocumentClient()
+//const eqTable = process.env.EQUIPMENT_TABLE
 
-  const userId = 'auth0|someuser'; // STUB FOR NOW
-  const equipmentId = uuid.v4() // Unique ID
+export const handler = middy(
+  async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
+    logger.info('Processing CreateEquipment event', event)
 
-  const parsedBody = JSON.parse(event.body)
+    const newEquipment: CreateEquipmentRequest = JSON.parse(event.body)
+    const userId = getUserId(event)
 
-  const newItem = {
-      userId: userId
-      , equipmentId: equipmentId
-      , name: parsedBody.name
-      , createdAt: new Date().toISOString()
-      , status: parsedBody.status
-      , statusChangedAt: new Date().toISOString()
-      , attachmentUrl: ''
-  }
+    const newItem = await createEquipment(userId, newEquipment)
+    logger.info('New equipment created', newItem)
 
-  await docClient.put({
-    TableName: eqTable
-    , Item: newItem
-  }).promise()
-
-  return {
-    statusCode: 201
-    , headers: {
-      'Access-Control-Allow-Origin': '*'
+    return {
+      statusCode: 201,
+      body: JSON.stringify({
+        item: newItem
+      })
     }
-    , body: JSON.stringify({
-        newItem
+})
+
+handler
+  .use(httpErrorHandler())
+  .use(
+    cors({
+      credentials: true
     })
-  }
-}
+  )

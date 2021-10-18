@@ -1,26 +1,39 @@
-import { APIGatewayProxyHandler, APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda'
 import 'source-map-support/register'
-import * as AWS from 'aws-sdk'
 
-const docClient = new AWS.DynamoDB.DocumentClient()
-const eqTable = process.env.EQUIPMENT_TABLE
+import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda'
+import * as middy from 'middy'
+import { cors, httpErrorHandler } from 'middy/middlewares'
 
-export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
-  console.log('Processing event:', event)
+import { getEquipmentListForUser /*, timeInMs, setLatencyMetric*/ } from '../../helpers/equipment'
+import { getUserId } from '../utils';
 
-  const result = await docClient.scan({
-    TableName: eqTable
-  }).promise()
+//import * as AWS from 'aws-sdk'
 
-  const items = result.Items
+import { createLogger } from '../../utils/logger'
+const logger = createLogger('getEquipmentList')
 
-  return {
-    statusCode: 200,
-    headers: {
-      'Access-Control-Allow-Origin': '*'
-    },
-    body: JSON.stringify({
-      items
+//const docClient = new AWS.DynamoDB.DocumentClient()
+//const eqTable = process.env.EQUIPMENT_TABLE
+
+export const handler = middy(
+  async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
+    logger.info('Processing GetEquipmentList event', event)
+    const userId = getUserId(event)
+    const eqList = await getEquipmentListForUser(userId)
+    logger.info('Equipment list found', eqList)
+
+    return {
+      statusCode: 200,
+      body: JSON.stringify({
+        items: eqList
+      })
+    }
+})
+
+handler
+  .use(httpErrorHandler())
+  .use(
+    cors({
+      credentials: true
     })
-  }
-}
+  )
