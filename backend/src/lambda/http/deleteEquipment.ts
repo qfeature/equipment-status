@@ -26,7 +26,7 @@ export const handler = middy(
 
         const userId = getUserId(event)
 
-        // Check if todo item belongs to user
+        // Check if equipment belongs to user
         const eqItem = await findEquipment(userId, equipmentId)
         if (!eqItem) {
             return {

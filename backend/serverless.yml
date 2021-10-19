@@ -7,6 +7,8 @@ service:
 # Add the serverless-webpack plugin
 plugins:
   - serverless-webpack
+  - serverless-reqvalidator-plugin # For validating requests
+  - serverless-aws-documentation # For validating requests
   - serverless-iam-roles-per-function
 
 provider:
@@ -32,6 +34,22 @@ custom:
   webpack:
     webpackConfig: ./webpack.config.js
     includeModules: true
+  
+  # For validating requests
+  documentation:
+    api:
+      info:
+        version: v1.0.0
+        title: Equipment Status API
+        description: Serverless application for equipment status
+    models:
+      - name: CreateEquipmentRequest
+        contentType: application/json
+        schema: ${file(models/create-eq-model.json)}
+      - name: UpdateEquipmentRequest
+        contentType: application/json
+        schema: ${file(models/update-eq-model.json)}
+
 
 functions:
   # Handle authorization
@@ -66,12 +84,41 @@ functions:
           path: equipment
           cors: true
           authorizer: Auth
+          reqValidatorName: RequestBodyValidator
+          documentation:
+            summary: Create a new equipment
+            description: Create a new equipment
+            requestModels:
+              'application/json': CreateEquipmentRequest
     iamRoleStatements:
       - Effect: Allow
         Action:
           - dynamodb:PutItem
         Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.EQUIPMENT_TABLE}
 
+  # Update an equipment
+  UpdateEquipment:
+    handler: src/lambda/http/updateEquipment.handler
+    events:
+      - http:
+          method: patch
+          path: equipment/{equipmentId}
+          cors: true
+          authorizer: Auth
+          reqValidatorName: RequestBodyValidator
+          documentation:
+            summary: Update an equipment
+            description: Update an equipment
+            requestModels:
+              'application/json': UpdateEquipmentRequest
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - dynamodb:GetItem
+          - dynamodb:UpdateItem
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.EQUIPMENT_TABLE}
+  
+  # Delete an equipment
   DeleteEquipment:
     handler: src/lambda/http/deleteEquipment.handler
     events:
@@ -90,6 +137,16 @@ functions:
 
 resources:
   Resources:
+    # For validating the create and update equipment requests
+    RequestBodyValidator:
+      Type: AWS::ApiGateway::RequestValidator
+      Properties:
+        Name: 'request-body-validator'
+        RestApiId:
+          Ref: ApiGatewayRestApi
+        ValidateRequestBody: true
+        ValidateRequestParameters: false
+
     # Create a DynamoDB table with local secondary index and a composite key
     EquipmentTable:
       Type: AWS::DynamoDB::Table
