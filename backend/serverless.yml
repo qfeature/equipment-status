@@ -7,6 +7,7 @@ service:
 # Add the serverless-webpack plugin
 plugins:
   - serverless-webpack
+  - serverless-iam-roles-per-function
 
 provider:
   name: aws
@@ -26,11 +27,6 @@ provider:
     SIGNED_URL_EXPIRATION: 300
 
   iamRoleStatements:
-    - Effect: Allow
-      Action:
-        - dynamodb:Scan #GetEquipmentList
-        - dynamodb:PutItem #CreateEquipment
-      Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.EQUIPMENT_TABLE}
 
 custom:
   webpack:
@@ -51,6 +47,15 @@ functions:
           path: equipment
           cors: true
           authorizer: Auth
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - dynamodb:Query
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.EQUIPMENT_TABLE}
+      - Effect: Allow
+        Action:
+          - dynamodb:Query
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.EQUIPMENT_TABLE}/index/${self:provider.environment.EQUIPMENT_CREATEDAT_INDEX}
 
   # Create a new equipment
   CreateEquipment:
@@ -61,6 +66,27 @@ functions:
           path: equipment
           cors: true
           authorizer: Auth
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - dynamodb:PutItem
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.EQUIPMENT_TABLE}
+
+  DeleteEquipment:
+    handler: src/lambda/http/deleteEquipment.handler
+    events:
+      - http:
+          method: delete
+          path: equipment/{equipmentId}
+          cors: true
+          authorizer: Auth
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - dynamodb:GetItem
+          - dynamodb:DeleteItem
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.EQUIPMENT_TABLE}
+
 
 resources:
   Resources:
