@@ -57,14 +57,15 @@ export class EquipmentAccess {
         const result = await this.docClient.update({
             TableName: this.eqTable,
             Key: {"equipmentId": equipmentId, "userId": userId},
-            UpdateExpression: "SET #eqName = :name, statusChangedAt = :statusChangedAt, status = :status",
+            UpdateExpression: "SET #eqName = :name, statusChangedAt = :statusChangedAt, #statusName = :status",
             ExpressionAttributeValues: {
                 ":name": updateItem.name,
                 ":statusChangedAt": updateItem.statusChangedAt,
                 ":status": updateItem.status
             },
             ExpressionAttributeNames: {
-                "#eqName": "name"
+                "#eqName": "name",
+                "#statusName": "status"
             },
             ReturnValues: "UPDATED_NEW" //"NONE"
         }).promise()
