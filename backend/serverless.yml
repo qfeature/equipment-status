@@ -139,7 +139,7 @@ functions:
     events:
       - http:
           method: post
-          path: todos/{todoId}/attachment
+          path: equipment/{equipmentId}/attachment
           cors: true
           authorizer: Auth
     iamRoleStatements:
