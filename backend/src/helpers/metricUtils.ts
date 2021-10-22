@@ -1,7 +1,7 @@
 import * as AWS from 'aws-sdk'
-//import * as AWSXRay from 'aws-xray-sdk'
+import * as AWSXRay from 'aws-xray-sdk'
 
-//const XAWS = AWSXRay.captureAWS(AWS)
+const XAWS = AWSXRay.captureAWS(AWS) // Enable XRay Tracing
 
 // Implement CloudWatch metric
 
@@ -12,7 +12,7 @@ const cloudwatchNamespace = 'Udacity/ServerlessEquipmentStatusApp'
 
 export class MetricUtils {
     constructor(
-        private readonly cloudwatch = new AWS.CloudWatch()) {
+        private readonly cloudwatch = new XAWS.CloudWatch()) {
     }
 
     async setLatencyMetric(serviceName: string, totalTime: number) {
