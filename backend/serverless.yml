@@ -40,6 +40,9 @@ custom:
     webpackConfig: ./webpack.config.js
     includeModules: true
   
+  # SNS topic name
+  topicName: equipmentImagesTopic-${self:provider.stage}
+
   # For validating requests
   documentation:
     api:
@@ -139,6 +142,7 @@ functions:
           - dynamodb:DeleteItem
         Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.EQUIPMENT_TABLE}
 
+  # Create a presigned URL used for uploading an image to S3 bucket
   GenerateUploadUrl:
     handler: src/lambda/http/generateUploadUrl.handler
     events:
@@ -157,6 +161,20 @@ functions:
         Action:
           - s3:PutObject
         Resource: arn:aws:s3:::${self:provider.environment.ATTACHMENT_S3_BUCKET}/*
+
+  # Save information about the upload when SNS notifies a file is uploaded to S3
+  RecordUploadHistory:
+    handler: src/lambda/s3/recordUploadHistory.handler
+    events:
+      - sns:
+          arn:
+            Fn::Join:
+              - ':'
+              - - arn:aws:sns
+                - Ref: AWS::Region
+                - Ref: AWS::AccountId
+                - ${self:custom.topicName}
+          topicName: ${self:custom.topicName}
 
 
 resources:
@@ -212,10 +230,16 @@ resources:
               ProjectionType: ALL # What attributes will be copied to an index
 
     # Create a S3 Bucket
+    # S3 bucket is configured to call SNS upon file upload
     AttachmentsBucket:
       Type: AWS::S3::Bucket
+      DependsOn: SNSTopicPolicy
       Properties:
         BucketName: ${self:provider.environment.ATTACHMENT_S3_BUCKET}
+        NotificationConfiguration:
+          TopicConfigurations:
+            - Event: s3:ObjectCreated:Put
+              Topic: !Ref ImagesTopic
         CorsConfiguration:
           CorsRules:
             -
@@ -245,3 +269,29 @@ resources:
               Action: 's3:GetObject'
               Resource: 'arn:aws:s3:::${self:provider.environment.ATTACHMENT_S3_BUCKET}/*'
         Bucket: !Ref AttachmentsBucket
+
+    # SNS Topic
+    ImagesTopic:
+      Type: AWS::SNS::Topic
+      Properties:
+        DisplayName: Image bucket topic
+        TopicName: ${self:custom.topicName}
+
+    # SNS Topic Policy. This allows S3 to send events to this SNS topic.
+    SNSTopicPolicy:
+      Type: AWS::SNS::TopicPolicy
+      Properties:
+        PolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+            - Effect: Allow
+              Principal:
+                AWS: "*"
+              Action: sns:Publish
+              Resource:
+                !Ref ImagesTopic
+              Condition:
+                ArnLike:
+                  AWS:SourceArn: arn:aws:s3:::${self:provider.environment.ATTACHMENT_S3_BUCKET}
+        Topics:
+          - !Ref ImagesTopic
