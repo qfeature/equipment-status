@@ -141,6 +141,11 @@ functions:
           - dynamodb:GetItem
           - dynamodb:DeleteItem
         Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.EQUIPMENT_TABLE}
+      - Effect: Allow
+        Action:
+          - s3:GetObject # Allow call to function headObject
+          - s3:DeleteObject
+        Resource: arn:aws:s3:::${self:provider.environment.ATTACHMENT_S3_BUCKET}/*
 
   # Create a presigned URL used for uploading an image to S3 bucket
   GenerateUploadUrl:
@@ -240,6 +245,8 @@ resources:
           TopicConfigurations:
             - Event: s3:ObjectCreated:Put
               Topic: !Ref ImagesTopic
+            #- Event: s3:ObjectRemoved:Delete
+            #  Topic: !Ref ImagesTopic
         CorsConfiguration:
           CorsRules:
             -

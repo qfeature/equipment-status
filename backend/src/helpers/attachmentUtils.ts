@@ -27,4 +27,25 @@ export class AttachmentUtils {
 
         return signedUrl
     }
+
+    // delete a file from S3 bucket
+    async deleteUploadedFile(equipmentId: string) {
+        logger.info(`Deleting the uploaded file with key ${equipmentId}`)
+        const params = {
+            Bucket: this.bucketName,
+            Key: equipmentId,
+        }
+
+        try {
+            await this.s3.headObject(params).promise() // Check file is in S3 bucket
+            try {
+                await this.s3.deleteObject(params).promise() // Delete file from S3 bucket
+                logger.info('Deleted uploaded file successfully', { key: equipmentId })
+            } catch (e) {
+                logger.error('Unable to delete uploaded file', { error: e.message, errorCode: e.code })
+            }
+        } catch (err) {
+            logger.error('Uploaded file not found', { error: err.message , errorCode: err.code})
+        }
+    }
 }

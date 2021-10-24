@@ -55,6 +55,10 @@ export async function updateEquipment(userId: string, equipmentId: string, updat
 export async function deleteEquipment(userId: string, equipmentId: string) {
     logger.info('Deleting equipment', {"userId": userId, "equipmentId": equipmentId})
     await eqAccess.deleteEquipment(userId, equipmentId)
+
+    // Delete the uploaded image from S3 bucket
+    const attachmentUtils = new AttachmentUtils()
+    await attachmentUtils.deleteUploadedFile(equipmentId)
 }
 
 // Create presigned URL
