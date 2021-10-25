@@ -198,6 +198,14 @@ functions:
                 - ${self:custom.topicNameForFileDelete}
           topicName: ${self:custom.topicNameForFileDelete}
 
+  # Save equipment status statistics such as Up/Down/Limited
+  UpdateEquipmentStatistics:
+    handler: src/lambda/dynamoDb/updateEquipmentStatistics.handler
+    events:
+      - stream:
+          type: dynamodb
+          arn: !GetAtt EquipmentTable.StreamArn
+
 resources:
   Resources:
     # Allow API Gateway to set correct CORS headers if our custom authorizor fails
@@ -249,6 +257,8 @@ resources:
                 KeyType: RANGE
             Projection:
               ProjectionType: ALL # What attributes will be copied to an index
+        StreamSpecification:
+          StreamViewType: NEW_AND_OLD_IMAGES
 
     # Create a S3 Bucket
     # S3 bucket is configured to call SNS upon file upload
