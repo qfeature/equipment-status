@@ -43,6 +43,9 @@ custom:
   # SNS topic name
   topicName: equipmentImagesTopic-${self:provider.stage}
 
+  # SNS topic name (For file delete from S3 bucket)
+  topicNameForFileDelete: equipmentImagesTopicForDelete-${self:provider.stage}
+
   # For validating requests
   documentation:
     api:
@@ -181,6 +184,19 @@ functions:
                 - ${self:custom.topicName}
           topicName: ${self:custom.topicName}
 
+  # Save information about the delete when SNS notifies a file is deleted from S3
+  RecordDeleteHistory:
+    handler: src/lambda/s3/recordDeleteHistory.handler
+    events:
+      - sns:
+          arn:
+            Fn::Join:
+              - ':'
+              - - arn:aws:sns
+                - Ref: AWS::Region
+                - Ref: AWS::AccountId
+                - ${self:custom.topicNameForFileDelete}
+          topicName: ${self:custom.topicNameForFileDelete}
 
 resources:
   Resources:
@@ -245,8 +261,8 @@ resources:
           TopicConfigurations:
             - Event: s3:ObjectCreated:Put
               Topic: !Ref ImagesTopic
-            #- Event: s3:ObjectRemoved:Delete
-            #  Topic: !Ref ImagesTopic
+            - Event: s3:ObjectRemoved:Delete
+              Topic: !Ref ImagesTopicForFileDelete
         CorsConfiguration:
           CorsRules:
             -
@@ -284,6 +300,13 @@ resources:
         DisplayName: Image bucket topic
         TopicName: ${self:custom.topicName}
 
+    # SNS Topic (For delete of file from S3)
+    ImagesTopicForFileDelete:
+      Type: AWS::SNS::Topic
+      Properties:
+        DisplayName: Image bucket topic for delete
+        TopicName: ${self:custom.topicNameForFileDelete}
+
     # SNS Topic Policy. This allows S3 to send events to this SNS topic.
     SNSTopicPolicy:
       Type: AWS::SNS::TopicPolicy
@@ -295,10 +318,22 @@ resources:
               Principal:
                 AWS: "*"
               Action: sns:Publish
+              Sid : '1'
               Resource:
                 !Ref ImagesTopic
               Condition:
                 ArnLike:
                   AWS:SourceArn: arn:aws:s3:::${self:provider.environment.ATTACHMENT_S3_BUCKET}
+            - Effect: Allow
+              Principal:
+                AWS: "*"
+              Action: sns:Publish
+              Sid : '2'
+              Resource:
+                !Ref ImagesTopicForFileDelete
+              Condition:
+                ArnLike:
+                  AWS:SourceArn: arn:aws:s3:::${self:provider.environment.ATTACHMENT_S3_BUCKET}
         Topics:
           - !Ref ImagesTopic
+          - !Ref ImagesTopicForFileDelete
