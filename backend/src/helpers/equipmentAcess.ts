@@ -4,6 +4,7 @@ import { DocumentClient } from 'aws-sdk/clients/dynamodb'
 import { createLogger } from '../utils/logger'
 import { EquipmentItem } from '../models/EquipmentItem'
 import { EquipmentUpdate } from '../models/EquipmentUpdate'
+import { EquipmentStatItem } from '../models/EquipmentStatItem'
 
 const XAWS = AWSXRay.captureAWS(AWS) // Enable XRay Tracing
 
@@ -18,7 +19,9 @@ export class EquipmentAccess {
         private readonly docClient: DocumentClient = createDynamoDBClient(),
         private readonly eqTable = process.env.EQUIPMENT_TABLE,
         private readonly eqTableIndex = process.env.EQUIPMENT_CREATEDAT_INDEX,
-        private readonly bucketName = process.env.ATTACHMENT_S3_BUCKET) {
+        private readonly bucketName = process.env.ATTACHMENT_S3_BUCKET,
+        private readonly statTable = process.env.EQUIPMENT_STATISTICS_TABLE /*,
+        private readonly statTableIndex = process.env.EQUIPMENT_STATISTICS_INDEX*/) {
     }
 
     // Get equipment list for a user
@@ -115,6 +118,101 @@ export class EquipmentAccess {
         logger.info('Found an equipment', JSON.stringify(result))
         
         return result.Item as EquipmentItem
+    }
+
+    //-------------------------------------------------------
+
+    // Statistics: Find equipment status count
+    async findStatusCount(userId: string, statusName: string): Promise<EquipmentStatItem> {
+        logger.info(`Looking for equipment status with statusName ${statusName} and userId ${userId}`)
+        try {
+            const result = await this.docClient.get({
+                TableName: this.statTable,
+                Key: {
+                    userId: userId,
+                    statusName: statusName
+                }
+            }).promise()
+            logger.info('Result of findStatusCount', {result: result});
+            if (JSON.stringify(result) === '{}') {
+                return null
+            } else {
+                return result.Item as EquipmentStatItem
+            }
+        } catch (err) {
+            logger.error('Error during call to findStatusCount', { error: err.message , errorCode: err.code})
+            return null
+        }
+    }
+
+    // Statistics: Add first status count entry
+    async createStatusCount(statItem: EquipmentStatItem): Promise<EquipmentStatItem> {
+        logger.info('Creating a first status count entry', statItem)
+
+        let result = await this.docClient.put({
+            TableName: this.statTable,
+            Item: statItem
+        }).promise()
+        logger.info('Result from createStatusCount', {result: result})
+        return statItem   
+    }
+
+    // Statistics: Increment equipment status count
+    async incrementStatusCount(userId: string, statusName: string) {
+        logger.info(`Increment status count for userId ${userId} and statusName ${statusName}`)
+
+        const itemFound = await this.findStatusCount(userId, statusName)
+        logger.info('Result of itemFound', {itemFound: itemFound})
+
+        if (itemFound) {
+            let result = await this.docClient.update({
+                TableName: this.statTable,
+                Key: {"userId": userId, "statusName": statusName},
+                UpdateExpression: "SET statusCount = statusCount + :statusCount, updatedAt = :updatedAt",
+                ExpressionAttributeValues: {
+                    ":statusCount": 1,
+                    ":updatedAt": new Date().toISOString()
+                },
+                ReturnValues: "UPDATED_NEW" //"NONE"
+            }).promise()
+            logger.info('Result from increment call', {result: result})
+        } else {
+            await this.createStatusCount({
+                userId: userId,
+                statusName: statusName,
+                statusCount: 1,
+                updatedAt: new Date().toISOString()
+            })
+        }
+    }
+
+    // Statistics: Decrement equipment status count
+    async decrementStatusCount(userId: string, statusName: string) {
+        logger.info(`Decrement status count for userId ${userId} and statusName ${statusName}`)
+
+        const itemFound = await this.findStatusCount(userId, statusName)
+        logger.info('Result of itemFound', {itemFound: itemFound})
+
+        if (itemFound) {
+            let result = await this.docClient.update({
+                TableName: this.statTable,
+                Key: {"userId": userId, "statusName": statusName},
+                UpdateExpression: "SET statusCount = statusCount - :statusCount, updatedAt = :updatedAt",
+                ExpressionAttributeValues: {
+                    ":statusCount": 1,
+                    ":updatedAt": new Date().toISOString()
+                },
+                ReturnValues: "UPDATED_NEW" //"NONE"
+            }).promise()
+            logger.info('Result from decrement call', {result: result})
+        } else {
+            await this.createStatusCount({
+                userId: userId,
+                statusName: statusName,
+                statusCount: 0,
+                updatedAt: new Date().toISOString()
+            })
+        }
     }
 }
 

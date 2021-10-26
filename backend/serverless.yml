@@ -32,6 +32,8 @@ provider:
     EQUIPMENT_CREATEDAT_INDEX: CreatedAtIndex
     ATTACHMENT_S3_BUCKET: quyen-serverless-equipment-status-images-${self:provider.stage} # Bucket to store attached image
     SIGNED_URL_EXPIRATION: 300
+    EQUIPMENT_STATISTICS_TABLE: EquipmentStatistics-${self:provider.stage}
+    EQUIPMENT_STATISTICS_INDEX: UpdatedAtIndex
 
   iamRoleStatements:
 
@@ -199,12 +201,19 @@ functions:
           topicName: ${self:custom.topicNameForFileDelete}
 
   # Save equipment status statistics such as Up/Down/Limited
-  UpdateEquipmentStatistics:
-    handler: src/lambda/dynamoDb/updateEquipmentStatistics.handler
+  UpdateEqStats:
+    handler: src/lambda/dynamoDb/updateEqStats.handler
     events:
       - stream:
           type: dynamodb
           arn: !GetAtt EquipmentTable.StreamArn
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - dynamodb:GetItem
+          - dynamodb:PutItem
+          - dynamodb:UpdateItem
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.EQUIPMENT_STATISTICS_TABLE}
 
 resources:
   Resources:
@@ -259,6 +268,34 @@ resources:
               ProjectionType: ALL # What attributes will be copied to an index
         StreamSpecification:
           StreamViewType: NEW_AND_OLD_IMAGES
+
+    # Create a DynamoDB table with local secondary index and a composite key to store equipment status statistics
+    EquipmentStatisticsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        AttributeDefinitions:
+          - AttributeName: userId
+            AttributeType: S
+          - AttributeName: statusName
+            AttributeType: S
+          - AttributeName: updatedAt
+            AttributeType: S
+        KeySchema:
+          - AttributeName: userId
+            KeyType: HASH # Partition key
+          - AttributeName: statusName
+            KeyType: RANGE # Sort key
+        BillingMode: PAY_PER_REQUEST
+        TableName: ${self:provider.environment.EQUIPMENT_STATISTICS_TABLE}
+        LocalSecondaryIndexes:
+          - IndexName: ${self:provider.environment.EQUIPMENT_STATISTICS_INDEX}
+            KeySchema:
+              - AttributeName: userId
+                KeyType: HASH
+              - AttributeName: updatedAt
+                KeyType: RANGE
+            Projection:
+              ProjectionType: ALL # What attributes will be copied to an index
 
     # Create a S3 Bucket
     # S3 bucket is configured to call SNS upon file upload

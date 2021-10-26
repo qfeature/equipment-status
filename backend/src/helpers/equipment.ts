@@ -81,6 +81,35 @@ export async function findEquipment(userId: string, equipmentId: string): Promis
     return eqItem
 }
 
+//-------------------------------------------------------------
+
+// Statistics: increment equipment status count
+export async function processEquipmentAddRecord(userId: string, newItem: any) {
+    let newStatus = newItem.status.S
+    await eqAccess.incrementStatusCount(userId, newStatus)
+}
+
+// Statistics: increment and decrement equipment status count
+export async function processEquipmentUpdateRecord(userId: string, newItem: any, oldItem: any) {
+    let newStatus = newItem.status.S
+    let oldStatus = oldItem.status.S
+    if (newStatus !== oldStatus) {
+        // Increment for new status
+        await eqAccess.incrementStatusCount(userId, newStatus)
+        
+        // Decrement for old status
+        await eqAccess.decrementStatusCount(userId, oldStatus)
+    }
+}
+
+// Statistics: decrement equipment status count
+export async function processEquipmentDeleteRecord(userId: string, oldItem: any) {
+    let oldStatus = oldItem.status.S
+    await eqAccess.decrementStatusCount(userId, oldStatus)
+}
+
+//-------------------------------------------------------------
+
 // Metric: Set latency metric
 export async function setLatencyMetric(serviceName: string, totalTime: number) {
     const metricUtils = new MetricUtils()
