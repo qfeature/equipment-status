@@ -165,12 +165,18 @@ export class EquipmentAccess {
         logger.info('Result of itemFound', {itemFound: itemFound})
 
         if (itemFound) {
+            let currentCount = itemFound.statusCount
+            if (currentCount < 0) {
+                currentCount = 0
+            }
+            let newCount = currentCount + 1; 
+
             let result = await this.docClient.update({
                 TableName: this.statTable,
                 Key: {"userId": userId, "statusName": statusName},
-                UpdateExpression: "SET statusCount = statusCount + :statusCount, updatedAt = :updatedAt",
+                UpdateExpression: "SET statusCount = :statusCount, updatedAt = :updatedAt",
                 ExpressionAttributeValues: {
-                    ":statusCount": 1,
+                    ":statusCount": newCount,
                     ":updatedAt": new Date().toISOString()
                 },
                 ReturnValues: "UPDATED_NEW" //"NONE"
@@ -194,12 +200,18 @@ export class EquipmentAccess {
         logger.info('Result of itemFound', {itemFound: itemFound})
 
         if (itemFound) {
+            let currentCount = itemFound.statusCount
+            let newCount = currentCount - 1; 
+            if (newCount < 0) {
+                newCount = 0;
+            }
+
             let result = await this.docClient.update({
                 TableName: this.statTable,
                 Key: {"userId": userId, "statusName": statusName},
-                UpdateExpression: "SET statusCount = statusCount - :statusCount, updatedAt = :updatedAt",
+                UpdateExpression: "SET statusCount = :statusCount, updatedAt = :updatedAt",
                 ExpressionAttributeValues: {
-                    ":statusCount": 1,
+                    ":statusCount": newCount,
                     ":updatedAt": new Date().toISOString()
                 },
                 ReturnValues: "UPDATED_NEW" //"NONE"
