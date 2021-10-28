@@ -215,6 +215,25 @@ functions:
           - dynamodb:UpdateItem
         Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.EQUIPMENT_STATISTICS_TABLE}
 
+  # Get the count of equipment Up/Down/Limited status
+  GetEqStats:
+    handler: src/lambda/http/getEqStats.handler
+    events:
+      - http:
+          method: get
+          path: equipment/statuscount
+          cors: true
+          authorizer: Auth
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - dynamodb:Query
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.EQUIPMENT_STATISTICS_TABLE}
+      - Effect: Allow
+        Action:
+          - dynamodb:Query
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.EQUIPMENT_STATISTICS_TABLE}/index/${self:provider.environment.EQUIPMENT_STATISTICS_INDEX}
+
 resources:
   Resources:
     # Allow API Gateway to set correct CORS headers if our custom authorizor fails

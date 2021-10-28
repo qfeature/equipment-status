@@ -1,10 +1,13 @@
 import { EquipmentAccess } from './equipmentAcess'
-import { AttachmentUtils } from './attachmentUtils';
+import { AttachmentUtils } from './attachmentUtils'
 import { EquipmentItem } from '../models/EquipmentItem'
 import { CreateEquipmentRequest } from '../requests/CreateEquipmentRequest'
 import { UpdateEquipmentRequest } from '../requests/UpdateEquipmentRequest'
 import { createLogger } from '../utils/logger'
 import * as uuid from 'uuid'
+
+import { EquipmentStatItem } from '../models/EquipmentStatItem'
+
 import { MetricUtils } from './metricUtils';
 // import * as createError from 'http-errors'
 
@@ -108,6 +111,11 @@ export async function processEquipmentDeleteRecord(userId: string, oldItem: any)
     await eqAccess.decrementStatusCount(userId, oldStatus)
 }
 
+// Statistics: get equipment Update/Down/Limited status count for a user
+export async function getEqStatsForUser(userId: string): Promise<EquipmentStatItem[]> {
+    logger.info('Getting equipment status count for user', userId)
+    return await eqAccess.getEqStatsForUser(userId)
+}
 //-------------------------------------------------------------
 
 // Metric: Set latency metric

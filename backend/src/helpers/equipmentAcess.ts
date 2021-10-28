@@ -20,8 +20,8 @@ export class EquipmentAccess {
         private readonly eqTable = process.env.EQUIPMENT_TABLE,
         private readonly eqTableIndex = process.env.EQUIPMENT_CREATEDAT_INDEX,
         private readonly bucketName = process.env.ATTACHMENT_S3_BUCKET,
-        private readonly statTable = process.env.EQUIPMENT_STATISTICS_TABLE /*,
-        private readonly statTableIndex = process.env.EQUIPMENT_STATISTICS_INDEX*/) {
+        private readonly statTable = process.env.EQUIPMENT_STATISTICS_TABLE,
+        private readonly statTableIndex = process.env.EQUIPMENT_STATISTICS_INDEX) {
     }
 
     // Get equipment list for a user
@@ -225,6 +225,23 @@ export class EquipmentAccess {
                 updatedAt: new Date().toISOString()
             })
         }
+    }
+
+    // Statistics: Get equipment Update/Down/Limited status count for a user
+    async getEqStatsForUser(userId: string): Promise<EquipmentStatItem[]> {
+        logger.info('Getting equipment status count for user', userId)
+
+        const result = await this.docClient.query({
+            TableName: this.statTable,
+            IndexName: this.statTableIndex,
+            KeyConditionExpression: 'userId = :userId',
+            ExpressionAttributeValues: {
+                ':userId': userId
+            }
+        }).promise()
+
+        const items = result.Items
+        return items as EquipmentStatItem[]
     }
 }
 
