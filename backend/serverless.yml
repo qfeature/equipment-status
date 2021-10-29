@@ -34,6 +34,8 @@ provider:
     SIGNED_URL_EXPIRATION: 300
     EQUIPMENT_STATISTICS_TABLE: EquipmentStatistics-${self:provider.stage}
     EQUIPMENT_STATISTICS_INDEX: UpdatedAtIndex
+    ATTACHMENT_HISTORY_TABLE: EquipmentAttachHist-${self:provider.stage}
+    ATTACHMENT_HISTORY_INDEX: EventTimeIndex
 
   iamRoleStatements:
 
@@ -185,6 +187,12 @@ functions:
                 - Ref: AWS::AccountId
                 - ${self:custom.topicName}
           topicName: ${self:custom.topicName}
+    iamRoleStatementsName: RecordUploadHistory-iamRole # Add custom name since auto-generated name exceeds 64 chars
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - dynamodb:PutItem
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.ATTACHMENT_HISTORY_TABLE}
 
   # Save information about the delete when SNS notifies a file is deleted from S3
   RecordDeleteHistory:
@@ -199,6 +207,12 @@ functions:
                 - Ref: AWS::AccountId
                 - ${self:custom.topicNameForFileDelete}
           topicName: ${self:custom.topicNameForFileDelete}
+    iamRoleStatementsName: RecordDeleteHistory-iamRole # Add custom name since auto-generated name exceeds 64 chars
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - dynamodb:PutItem
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.ATTACHMENT_HISTORY_TABLE}
 
   # Save equipment status statistics such as Up/Down/Limited
   UpdateEqStats:
@@ -312,6 +326,34 @@ resources:
               - AttributeName: userId
                 KeyType: HASH
               - AttributeName: updatedAt
+                KeyType: RANGE
+            Projection:
+              ProjectionType: ALL # What attributes will be copied to an index
+
+    # Create a DynamoDB table to record when a file is uploaded or deleted from S3 bucket
+    AttachmentHistTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        AttributeDefinitions:
+          - AttributeName: fileId # file key when uploaded to S3
+            AttributeType: S
+          - AttributeName: historyId
+            AttributeType: S
+          - AttributeName: eventTime
+            AttributeType: S
+        KeySchema:
+          - AttributeName: fileId
+            KeyType: HASH # Partition key
+          - AttributeName: historyId
+            KeyType: RANGE # Sort key
+        BillingMode: PAY_PER_REQUEST
+        TableName: ${self:provider.environment.ATTACHMENT_HISTORY_TABLE}
+        LocalSecondaryIndexes:
+          - IndexName: ${self:provider.environment.ATTACHMENT_HISTORY_INDEX}
+            KeySchema:
+              - AttributeName: fileId
+                KeyType: HASH
+              - AttributeName: eventTime
                 KeyType: RANGE
             Projection:
               ProjectionType: ALL # What attributes will be copied to an index

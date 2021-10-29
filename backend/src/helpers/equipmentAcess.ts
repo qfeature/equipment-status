@@ -5,6 +5,7 @@ import { createLogger } from '../utils/logger'
 import { EquipmentItem } from '../models/EquipmentItem'
 import { EquipmentUpdate } from '../models/EquipmentUpdate'
 import { EquipmentStatItem } from '../models/EquipmentStatItem'
+import { FileHistoryItem } from '../models/FileHistoryItem'
 
 const XAWS = AWSXRay.captureAWS(AWS) // Enable XRay Tracing
 
@@ -21,7 +22,9 @@ export class EquipmentAccess {
         private readonly eqTableIndex = process.env.EQUIPMENT_CREATEDAT_INDEX,
         private readonly bucketName = process.env.ATTACHMENT_S3_BUCKET,
         private readonly statTable = process.env.EQUIPMENT_STATISTICS_TABLE,
-        private readonly statTableIndex = process.env.EQUIPMENT_STATISTICS_INDEX) {
+        private readonly statTableIndex = process.env.EQUIPMENT_STATISTICS_INDEX,
+        private readonly histTable = process.env.ATTACHMENT_HISTORY_TABLE/*,
+        private readonly histTableIndex = process.env.ATTACHMENT_HISTORY_INDEX*/) {
     }
 
     // Get equipment list for a user
@@ -242,6 +245,20 @@ export class EquipmentAccess {
 
         const items = result.Items
         return items as EquipmentStatItem[]
+    }
+
+    //-------------------------------------------------------
+
+    // History: save history of file update and file deletion from S3 bucket.
+    async saveFileHistory(fileHistItem: FileHistoryItem): Promise<FileHistoryItem> {
+        const result = await this.docClient.put({
+            TableName: this.histTable,
+            Item: fileHistItem
+        }).promise()
+
+        logger.info('Result from saveFileHistory', {result: result})
+
+        return fileHistItem
     }
 }
 

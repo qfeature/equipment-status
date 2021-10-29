@@ -1,14 +1,14 @@
 import { EquipmentAccess } from './equipmentAcess'
 import { AttachmentUtils } from './attachmentUtils'
 import { EquipmentItem } from '../models/EquipmentItem'
+import { EquipmentStatItem } from '../models/EquipmentStatItem'
+import { FileHistoryItem } from '../models/FileHistoryItem'
 import { CreateEquipmentRequest } from '../requests/CreateEquipmentRequest'
 import { UpdateEquipmentRequest } from '../requests/UpdateEquipmentRequest'
+import { SaveFileHistoryRequest } from '../requests/SaveFileHistoryRequest'
+import { MetricUtils } from './metricUtils';
 import { createLogger } from '../utils/logger'
 import * as uuid from 'uuid'
-
-import { EquipmentStatItem } from '../models/EquipmentStatItem'
-
-import { MetricUtils } from './metricUtils';
 // import * as createError from 'http-errors'
 
 // Implement business logic
@@ -67,7 +67,7 @@ export async function deleteEquipment(userId: string, equipmentId: string) {
 // Create presigned URL
 export async function createAttachmentPresignedUrl(userId: string, equipmentId: string) {
     logger.info('Creating attachment presigned URL', {"userId": userId, "equipmentId": equipmentId})
-    
+
     // save attachment URL for an equipment
     await eqAccess.updateEquipmentUrl(userId, equipmentId)
 
@@ -99,7 +99,7 @@ export async function processEquipmentUpdateRecord(userId: string, newItem: any,
     if (newStatus !== oldStatus) {
         // Increment for new status
         await eqAccess.incrementStatusCount(userId, newStatus)
-        
+
         // Decrement for old status
         await eqAccess.decrementStatusCount(userId, oldStatus)
     }
@@ -116,6 +116,24 @@ export async function getEqStatsForUser(userId: string): Promise<EquipmentStatIt
     logger.info('Getting equipment status count for user', userId)
     return await eqAccess.getEqStatsForUser(userId)
 }
+
+//-------------------------------------------------------------
+
+// History: save history of file update and file deletion from S3 bucket.
+export async function saveFileHistory(fileHist: SaveFileHistoryRequest): Promise<FileHistoryItem> {
+    const historyId = uuid.v4() // Unique ID
+
+    return await eqAccess.saveFileHistory({
+        fileId: fileHist.fileId,
+        historyId: historyId,
+        eventTime: fileHist.eventTime,
+        eventName: fileHist.eventName,
+        fileSequencer: fileHist.fileSequencer,
+        fileSize: fileHist.fileSize,
+        fileEtag: fileHist.fileEtag
+    })
+}
+
 //-------------------------------------------------------------
 
 // Metric: Set latency metric
