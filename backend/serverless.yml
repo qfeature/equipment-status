@@ -89,6 +89,10 @@ functions:
         Action:
           - dynamodb:Query
         Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.EQUIPMENT_TABLE}/index/${self:provider.environment.EQUIPMENT_CREATEDAT_INDEX}
+      - Effect: Allow
+        Action:
+          - cloudwatch:PutMetricData
+        Resource: "*"
 
   # Create a new equipment
   CreateEquipment:
@@ -110,6 +114,10 @@ functions:
         Action:
           - dynamodb:PutItem
         Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.EQUIPMENT_TABLE}
+      - Effect: Allow
+        Action:
+          - cloudwatch:PutMetricData
+        Resource: "*"
 
   # Update an equipment
   UpdateEquipment:
@@ -132,7 +140,11 @@ functions:
           - dynamodb:GetItem
           - dynamodb:UpdateItem
         Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.EQUIPMENT_TABLE}
-  
+      - Effect: Allow
+        Action:
+          - cloudwatch:PutMetricData
+        Resource: "*"
+
   # Delete an equipment
   DeleteEquipment:
     handler: src/lambda/http/deleteEquipment.handler
@@ -153,6 +165,10 @@ functions:
           - s3:GetObject # Allow call to function headObject
           - s3:DeleteObject
         Resource: arn:aws:s3:::${self:provider.environment.ATTACHMENT_S3_BUCKET}/*
+      - Effect: Allow
+        Action:
+          - cloudwatch:PutMetricData
+        Resource: "*"
 
   # Create a presigned URL used for uploading an image to S3 bucket
   GenerateUploadUrl:
@@ -173,6 +189,10 @@ functions:
         Action:
           - s3:PutObject
         Resource: arn:aws:s3:::${self:provider.environment.ATTACHMENT_S3_BUCKET}/*
+      - Effect: Allow
+        Action:
+          - cloudwatch:PutMetricData
+        Resource: "*"
 
   # Save information about the upload when SNS notifies a file is uploaded to S3
   RecordUploadHistory:
@@ -193,6 +213,10 @@ functions:
         Action:
           - dynamodb:PutItem
         Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.ATTACHMENT_HISTORY_TABLE}
+      - Effect: Allow
+        Action:
+          - cloudwatch:PutMetricData
+        Resource: "*"
 
   # Save information about the delete when SNS notifies a file is deleted from S3
   RecordDeleteHistory:
@@ -213,6 +237,10 @@ functions:
         Action:
           - dynamodb:PutItem
         Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.ATTACHMENT_HISTORY_TABLE}
+      - Effect: Allow
+        Action:
+          - cloudwatch:PutMetricData
+        Resource: "*"
 
   # Save equipment status statistics such as Up/Down/Limited
   UpdateEqStats:
@@ -228,6 +256,10 @@ functions:
           - dynamodb:PutItem
           - dynamodb:UpdateItem
         Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.EQUIPMENT_STATISTICS_TABLE}
+      - Effect: Allow
+        Action:
+          - cloudwatch:PutMetricData
+        Resource: "*"
 
   # Get the count of equipment Up/Down/Limited status
   GetEqStats:
@@ -247,6 +279,10 @@ functions:
         Action:
           - dynamodb:Query
         Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.EQUIPMENT_STATISTICS_TABLE}/index/${self:provider.environment.EQUIPMENT_STATISTICS_INDEX}
+      - Effect: Allow
+        Action:
+          - cloudwatch:PutMetricData
+        Resource: "*"
 
   # Get the history of file upload/delete for an equipment
   GetFileHistory:
@@ -270,7 +306,10 @@ functions:
         Action:
           - dynamodb:Query
         Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.ATTACHMENT_HISTORY_TABLE}/index/${self:provider.environment.ATTACHMENT_HISTORY_INDEX}
-
+      - Effect: Allow
+        Action:
+          - cloudwatch:PutMetricData
+        Resource: "*"
 
 resources:
   Resources:
