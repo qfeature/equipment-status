@@ -42,10 +42,10 @@ export class AttachmentUtils {
                 await this.s3.deleteObject(params).promise() // Delete file from S3 bucket
                 logger.info('Deleted uploaded file successfully', { key: equipmentId })
             } catch (e) {
-                logger.error('Unable to delete uploaded file', { error: e.message, errorCode: e.code })
+                logger.error('Unable to delete uploaded file', { error: JSON.stringify(e) })
             }
         } catch (err) {
-            logger.error('Uploaded file not found', { error: err.message , errorCode: err.code})
+            logger.error('Uploaded file not found', { error: JSON.stringify(err) })
         }
     }
 }

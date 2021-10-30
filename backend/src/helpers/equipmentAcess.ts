@@ -6,16 +6,12 @@ import { EquipmentItem } from '../models/EquipmentItem'
 import { EquipmentUpdate } from '../models/EquipmentUpdate'
 import { EquipmentStatItem } from '../models/EquipmentStatItem'
 import { FileHistoryItem } from '../models/FileHistoryItem'
-
 const XAWS = AWSXRay.captureAWS(AWS) // Enable XRay Tracing
-
 const logger = createLogger('equipmentAccess')
 
-// Implement data layer logic
+/**Implement data layer logic*/
 
 export class EquipmentAccess {
-
-    // class constructor
     constructor(
         private readonly docClient: DocumentClient = createDynamoDBClient(),
         private readonly eqTable = process.env.EQUIPMENT_TABLE,
@@ -29,7 +25,7 @@ export class EquipmentAccess {
 
     // Get equipment list for a user
     async getEquipmentListForUser(userId: string): Promise<EquipmentItem[]> {
-        logger.info('Getting equipment list for user', userId)
+        logger.info('Getting equipment list for user', {userId: userId})
 
         const result = await this.docClient.query({
             TableName: this.eqTable,
@@ -46,7 +42,7 @@ export class EquipmentAccess {
 
     // Create an equipment
     async createEquipment(eqItem: EquipmentItem): Promise<EquipmentItem> {
-        logger.info('Creating an equipment', eqItem.equipmentId)
+        logger.info('Creating an equipment', eqItem)
 
         await this.docClient.put({
             TableName: this.eqTable,
@@ -58,9 +54,9 @@ export class EquipmentAccess {
 
     // Update an equipment
     async updateEquipment(userId: string, equipmentId: string, updateItem: EquipmentUpdate) {
-        logger.info(`Updating an equipment with equipmentId ${equipmentId} and userId ${userId}`, JSON.stringify(updateItem))
+        logger.info(`Updating an equipment with equipmentId ${equipmentId} and userId ${userId}`, updateItem)
 
-        const result = await this.docClient.update({
+        await this.docClient.update({
             TableName: this.eqTable,
             Key: {"equipmentId": equipmentId, "userId": userId},
             UpdateExpression: "SET #eqName = :name, statusChangedAt = :statusChangedAt, #statusName = :status",
@@ -75,9 +71,6 @@ export class EquipmentAccess {
             },
             ReturnValues: "UPDATED_NEW" //"NONE"
         }).promise()
-
-        logger.info('The updated result UPDATED_NEW', JSON.stringify(result))
-        //return undefined
     }
 
     // Delete an equipment
@@ -93,7 +86,7 @@ export class EquipmentAccess {
     async updateEquipmentUrl(userId: string, equipmentId: string) {
         logger.info(`Updating an equipment URL for equipmentId ${equipmentId} with userId ${userId}`)
 
-        const result = await this.docClient.update({
+        await this.docClient.update({
             TableName: this.eqTable,
             Key: {"equipmentId": equipmentId, "userId": userId},
             UpdateExpression: "SET attachmentUrl = :attachmentUrl",
@@ -102,8 +95,6 @@ export class EquipmentAccess {
             },
             ReturnValues: "UPDATED_NEW" //"NONE"
         }).promise()
-
-        logger.info('The updated URL result UPDATED_NEW', JSON.stringify(result))
     }
 
     // Find an equipment (given user id and equipment id)
@@ -119,7 +110,7 @@ export class EquipmentAccess {
         }).promise()
 
         logger.info('Found an equipment', JSON.stringify(result))
-        
+
         return result.Item as EquipmentItem
     }
 
@@ -143,7 +134,7 @@ export class EquipmentAccess {
                 return result.Item as EquipmentStatItem
             }
         } catch (err) {
-            logger.error('Error during call to findStatusCount', { error: err.message , errorCode: err.code})
+            logger.error('Error during call to findStatusCount', { error: JSON.stringify(err) })
             return null
         }
     }
@@ -165,7 +156,6 @@ export class EquipmentAccess {
         logger.info(`Increment status count for userId ${userId} and statusName ${statusName}`)
 
         const itemFound = await this.findStatusCount(userId, statusName)
-        logger.info('Result of itemFound', {itemFound: itemFound})
 
         if (itemFound) {
             let currentCount = itemFound.statusCount
@@ -184,7 +174,7 @@ export class EquipmentAccess {
                 },
                 ReturnValues: "UPDATED_NEW" //"NONE"
             }).promise()
-            logger.info('Result from increment call', {result: result})
+            logger.info('Result from incrementStatusCount', {result: result})
         } else {
             await this.createStatusCount({
                 userId: userId,
@@ -200,7 +190,6 @@ export class EquipmentAccess {
         logger.info(`Decrement status count for userId ${userId} and statusName ${statusName}`)
 
         const itemFound = await this.findStatusCount(userId, statusName)
-        logger.info('Result of itemFound', {itemFound: itemFound})
 
         if (itemFound) {
             let currentCount = itemFound.statusCount
@@ -219,7 +208,7 @@ export class EquipmentAccess {
                 },
                 ReturnValues: "UPDATED_NEW" //"NONE"
             }).promise()
-            logger.info('Result from decrement call', {result: result})
+            logger.info('Result from decrementStatusCount', {result: result})
         } else {
             await this.createStatusCount({
                 userId: userId,
@@ -232,7 +221,7 @@ export class EquipmentAccess {
 
     // Statistics: Get equipment Update/Down/Limited status count for a user
     async getEqStatsForUser(userId: string): Promise<EquipmentStatItem[]> {
-        logger.info('Getting equipment status count for user', userId)
+        logger.info('Getting equipment status count for user', {userId: userId})
 
         const result = await this.docClient.query({
             TableName: this.statTable,

@@ -1,5 +1,5 @@
 export interface EquipmentUpdate {
-    name: string
-    statusChangedAt: string
-    status: string 
+   name: string
+   statusChangedAt: string
+   status: string 
 }

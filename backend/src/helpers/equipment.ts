@@ -18,16 +18,13 @@ const eqAccess = new EquipmentAccess()
 
 // Get all equipment for a user
 export async function getEquipmentListForUser(userId: string): Promise<EquipmentItem[]> {
-    logger.info('Getting equipment list for user', userId)
     return await eqAccess.getEquipmentListForUser(userId)
 }
 
 // Create an equipment
 export async function createEquipment(userId: string, createEquipmentRequest: CreateEquipmentRequest): Promise<EquipmentItem> {
-    logger.info(`Creating an equipment for user ${userId}`, createEquipmentRequest)
-
     const equipmentId = uuid.v4() // Unique ID
-    logger.info('Creating new equipment with equipmentId', equipmentId)
+    logger.info(`Creating new equipment with equipmentId ${equipmentId} for userId ${userId}`, createEquipmentRequest)
 
     return await eqAccess.createEquipment({
         userId: userId,
@@ -42,7 +39,6 @@ export async function createEquipment(userId: string, createEquipmentRequest: Cr
 
 // Update an equipment
 export async function updateEquipment(userId: string, equipmentId: string, updateEquipmentRequest: UpdateEquipmentRequest) {
-    logger.info(`Updating equipment with equipmentId ${equipmentId} for userId ${userId}`, updateEquipmentRequest)
     await eqAccess.updateEquipment(
         userId,
         equipmentId,
@@ -54,9 +50,8 @@ export async function updateEquipment(userId: string, equipmentId: string, updat
     )
 }
 
-// Delete equipment
+// Delete an equipment and its attached image if exist
 export async function deleteEquipment(userId: string, equipmentId: string) {
-    logger.info('Deleting equipment', {"userId": userId, "equipmentId": equipmentId})
     await eqAccess.deleteEquipment(userId, equipmentId)
 
     // Delete the uploaded image from S3 bucket
@@ -86,34 +81,30 @@ export async function findEquipment(userId: string, equipmentId: string): Promis
 
 //-------------------------------------------------------------
 
-// Statistics: increment equipment status count
-export async function processEquipmentAddRecord(userId: string, newItem: any) {
-    let newStatus = newItem.status.S
+// Statistics: increment equipment status count when an equipment is created.
+export async function processEquipmentAddRecord(userId: string, newItem: EquipmentItem) {
+    const newStatus = newItem.status
     await eqAccess.incrementStatusCount(userId, newStatus)
 }
 
-// Statistics: increment and decrement equipment status count
-export async function processEquipmentUpdateRecord(userId: string, newItem: any, oldItem: any) {
-    let newStatus = newItem.status.S
-    let oldStatus = oldItem.status.S
+// Statistics: increment and decrement equipment status count when an equipment status is changed.
+export async function processEquipmentUpdateRecord(userId: string, newItem: EquipmentItem, oldItem: EquipmentItem) {
+    const newStatus = newItem.status
+    const oldStatus = oldItem.status
     if (newStatus !== oldStatus) {
-        // Increment for new status
         await eqAccess.incrementStatusCount(userId, newStatus)
-
-        // Decrement for old status
         await eqAccess.decrementStatusCount(userId, oldStatus)
     }
 }
 
-// Statistics: decrement equipment status count
-export async function processEquipmentDeleteRecord(userId: string, oldItem: any) {
-    let oldStatus = oldItem.status.S
+// Statistics: decrement equipment status count when an equipment is deleted.
+export async function processEquipmentDeleteRecord(userId: string, oldItem: EquipmentItem) {
+    const oldStatus = oldItem.status
     await eqAccess.decrementStatusCount(userId, oldStatus)
 }
 
 // Statistics: get equipment Update/Down/Limited status count for a user
 export async function getEqStatsForUser(userId: string): Promise<EquipmentStatItem[]> {
-    logger.info('Getting equipment status count for user', userId)
     return await eqAccess.getEqStatsForUser(userId)
 }
 
