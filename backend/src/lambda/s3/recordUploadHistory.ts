@@ -1,16 +1,16 @@
 import { SNSEvent, SNSHandler, S3EventRecord } from 'aws-lambda'
 import 'source-map-support/register'
 import { SaveFileHistoryRequest } from '../../requests/SaveFileHistoryRequest'
-import { saveFileHistory /*, timeInMs, setLatencyMetric*/ } from '../../helpers/equipment'
+import { saveFileHistory, timeInMs, setLatencyMetric } from '../../helpers/equipment'
 import { createLogger } from '../../utils/logger'
 const logger = createLogger('recordUploadHistory')
 
 /**Description: This lambda function gets called when a file is uploaded to the S3 bucket.*/
 
 export const handler: SNSHandler = async (event: SNSEvent) => {
-   logger.info('Processing SNS event ', event)
-
+   const startTime = timeInMs() // Record time start
    try {
+      logger.info('Processing SNS event ', event)
       for (const snsRecord of event.Records) {
          const s3EventStr = snsRecord.Sns.Message
          const s3Event = JSON.parse(s3EventStr) // is instanceof S3Event
@@ -32,7 +32,12 @@ export const handler: SNSHandler = async (event: SNSEvent) => {
             await saveFileHistory(uploadHist)
          }
       }
-   } catch (err) {
-      logger.error('Error during call to recordUploadHistory', { error: JSON.stringify(err) })
+   } catch (e) {
+      logger.error('RecordUploadHistory error', { error: JSON.stringify(e) })
+      //throw new Error(e)
+   } finally {
+      const endTime = timeInMs(); // Record time finished
+      const totalTime = endTime - startTime;
+      await setLatencyMetric('RecordUploadHistoryMetric', totalTime)
    }
 }
