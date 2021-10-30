@@ -8,7 +8,8 @@
         "minLength": 1
       },
       "status": {
-        "type": "string"
+        "type": "string",
+        "enum": ["Up", "Down", "Limited"]
       }
     },
     "required": [

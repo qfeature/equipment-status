@@ -11,7 +11,8 @@
         "type": "string"
       },
       "status": {
-        "type": "string"
+        "type": "string",
+        "enum": ["Up", "Down", "Limited"]
       }
     },
     "required": [
