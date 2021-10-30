@@ -134,6 +134,10 @@ export async function saveFileHistory(fileHist: SaveFileHistoryRequest): Promise
     })
 }
 
+// History: get file upload/delete history for an equipment.
+export async function getEquipmentFileHistory(equipmentId: string): Promise<FileHistoryItem[]> {
+    return await eqAccess.getEquipmentFileHistory(equipmentId)
+}
 //-------------------------------------------------------------
 
 // Metric: Set latency metric

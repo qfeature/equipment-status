@@ -23,8 +23,8 @@ export class EquipmentAccess {
         private readonly bucketName = process.env.ATTACHMENT_S3_BUCKET,
         private readonly statTable = process.env.EQUIPMENT_STATISTICS_TABLE,
         private readonly statTableIndex = process.env.EQUIPMENT_STATISTICS_INDEX,
-        private readonly histTable = process.env.ATTACHMENT_HISTORY_TABLE/*,
-        private readonly histTableIndex = process.env.ATTACHMENT_HISTORY_INDEX*/) {
+        private readonly histTable = process.env.ATTACHMENT_HISTORY_TABLE,
+        private readonly histTableIndex = process.env.ATTACHMENT_HISTORY_INDEX) {
     }
 
     // Get equipment list for a user
@@ -259,6 +259,22 @@ export class EquipmentAccess {
         logger.info('Result from saveFileHistory', {result: result})
 
         return fileHistItem
+    }
+
+    // History: get file upload/delete history for an equipment.
+    async getEquipmentFileHistory(equipmentId: string): Promise<FileHistoryItem[]> {
+        const fileId = equipmentId // The equipment ID is used as the file key when storing file in S3
+        const result = await this.docClient.query({
+            TableName: this.histTable,
+            IndexName: this.histTableIndex,
+            KeyConditionExpression: 'fileId = :fileId',
+            ExpressionAttributeValues: {
+                ':fileId' : fileId
+            }
+        }).promise()
+
+        const items = result.Items
+        return items as FileHistoryItem[]
     }
 }
 

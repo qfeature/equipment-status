@@ -248,6 +248,30 @@ functions:
           - dynamodb:Query
         Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.EQUIPMENT_STATISTICS_TABLE}/index/${self:provider.environment.EQUIPMENT_STATISTICS_INDEX}
 
+  # Get the history of file upload/delete for an equipment
+  GetFileHistory:
+    handler: src/lambda/http/getFileHistory.handler
+    events:
+      - http:
+          method: get
+          path: equipment/filehistory/{equipmentId}
+          cors: true
+          authorizer: Auth
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - dynamodb:GetItem
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.EQUIPMENT_TABLE}
+      - Effect: Allow
+        Action:
+          - dynamodb:Query
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.ATTACHMENT_HISTORY_TABLE}
+      - Effect: Allow
+        Action:
+          - dynamodb:Query
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.ATTACHMENT_HISTORY_TABLE}/index/${self:provider.environment.ATTACHMENT_HISTORY_INDEX}
+
+
 resources:
   Resources:
     # Allow API Gateway to set correct CORS headers if our custom authorizor fails
