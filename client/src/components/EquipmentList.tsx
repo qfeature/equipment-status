@@ -52,8 +52,12 @@ export class EquipmentList extends React.PureComponent<EquipmentListProps, Equip
     this.props.history.push(`/equipment/${equipmentId}/attach`)
   }
 
-  onEditButtonClick = (equipmentId: string) => {
-    this.props.history.push(`/equipment/${equipmentId}/edit`)
+  onEditButtonClick = (equipmentId: string, name: string, status: string) => {
+    this.props.history.push({
+      pathname: `/equipment/${equipmentId}/edit`
+      , search:''
+      , state: {currentName: name, currentStatus: status}
+    })
   }
 
   onEquipmentCreate = async (event: React.ChangeEvent<HTMLButtonElement>) => {
@@ -235,7 +239,7 @@ export class EquipmentList extends React.PureComponent<EquipmentListProps, Equip
                 <Button
                   icon
                   color="orange"
-                  onClick={() => this.onEditButtonClick(equipment.equipmentId)}>
+                  onClick={() => this.onEditButtonClick(equipment.equipmentId, equipment.name, equipment.status)}>
                   <Icon name="pencil" />
                 </Button>
               </Grid.Column>

@@ -3,6 +3,7 @@ import { Equipment } from '../types/Equipment';
 import { CreateEquipmentRequest } from '../types/CreateEquipmentRequest';
 import Axios from 'axios'
 import { UpdateEquipmentRequest } from '../types/UpdateEquipmentRequest';
+import { EquipmentStatistics } from '../types/EquipmentStatistics'
 
 export async function getEquipmentList(idToken: string): Promise<Equipment[]> {
   console.log('Fetching Equipment List')
@@ -30,7 +31,20 @@ export async function createEquipment(
   return response.data.item
 }
 
-export async function patchEquipment(
+// export async function patchEquipment(
+//   idToken: string,
+//   equipmentId: string,
+//   updatedEquipment: UpdateEquipmentRequest
+// ): Promise<void> {
+//   await Axios.patch(`${apiEndpoint}/equipment/${equipmentId}`, JSON.stringify(updatedEquipment), {
+//     headers: {
+//       'Content-Type': 'application/json',
+//       'Authorization': `Bearer ${idToken}`
+//     }
+//   })
+// }
+
+export async function updateEquipment(
   idToken: string,
   equipmentId: string,
   updatedEquipment: UpdateEquipmentRequest
@@ -70,4 +84,17 @@ export async function getUploadUrl(
 
 export async function uploadFile(uploadUrl: string, file: Buffer): Promise<void> {
   await Axios.put(uploadUrl, file)
+}
+
+export async function getEquipmentStatusStats(idToken: string): Promise<EquipmentStatistics[]> {
+  console.log('Fetching equipment status statistics')
+
+  const response = await Axios.get(`${apiEndpoint}/equipment/statuscount`, {
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${idToken}`
+    },
+  })
+  console.log('Equipment status statistics:', response.data)
+  return response.data.items
 }
