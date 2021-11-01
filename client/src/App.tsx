@@ -33,6 +33,7 @@ import { Link, Route, Router, Switch } from 'react-router-dom'
 import { Grid, Menu, Segment } from 'semantic-ui-react'
 
 import Auth from './auth/Auth'
+import { AttachEquipment } from './components/AttachEquipment'
 import { EditEquipment } from './components/EditEquipment'
 import { LogIn } from './components/LogIn'
 import { NotFound } from './components/NotFound'
@@ -123,6 +124,14 @@ export default class App extends Component<AppProps, AppState> {
           exact
           render={props => {
             return <EquipmentList {...props} auth={this.props.auth} />
+          }}
+        />
+
+        <Route
+          path="/equipment/:equipmentId/attach"
+          exact
+          render={props => {
+            return <AttachEquipment {...props} auth={this.props.auth} />
           }}
         />
 
