@@ -16,7 +16,7 @@ import {
   Label
 } from 'semantic-ui-react'
 
-import { createEquipment, deleteEquipment, getEquipmentList /*, patchEquipment*/ } from '../api/equipmentList-api'
+import { createEquipment, deleteEquipment, getEquipmentList } from '../api/equipmentList-api'
 import Auth from '../auth/Auth'
 import { Equipment } from '../types/Equipment'
 
@@ -71,8 +71,9 @@ export class EquipmentList extends React.PureComponent<EquipmentListProps, Equip
         newEquipmentName: '',
         newEquipmentStatus: 'Up'
       })
+      alert('Equipment created!')
     } catch {
-      alert('Equipment creation failed')
+      alert('Equipment creation failed. Make sure to provide an equipment name and select a status to create an equipment.')
     }
   }
 

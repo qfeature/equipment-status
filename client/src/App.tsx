@@ -1,33 +1,3 @@
-/*import React from 'react';
-import logo from './logo.svg';
-import './App.css';
-
-function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
-}
-
-export default App;
-*/
-
-//========================================
-
 import React, { Component } from 'react'
 import { Link, Route, Router, Switch } from 'react-router-dom'
 import { Grid, Menu, Segment } from 'semantic-ui-react'
@@ -38,6 +8,7 @@ import { EditEquipment } from './components/EditEquipment'
 import { LogIn } from './components/LogIn'
 import { NotFound } from './components/NotFound'
 import { EquipmentList } from './components/EquipmentList'
+import { EquipmentStatusCount } from './components/EquipmentStatusCount'
 
 export interface AppProps {}
 
@@ -91,11 +62,14 @@ export default class App extends Component<AppProps, AppState> {
           <Link to="/">Home</Link>
         </Menu.Item>
 
+        {this.statusCountButton()}
+
         <Menu.Menu position="right">{this.logInLogOutButton()}</Menu.Menu>
       </Menu>
     )
   }
 
+  /**renders Log In and Log Out button*/
   logInLogOutButton() {
     if (this.props.auth.isAuthenticated()) {
       return (
@@ -107,6 +81,17 @@ export default class App extends Component<AppProps, AppState> {
       return (
         <Menu.Item name="login" onClick={this.handleLogin}>
           Log In
+        </Menu.Item>
+      )
+    }
+  }
+
+  /**renders Status Count button*/
+  statusCountButton() {
+    if (this.props.auth.isAuthenticated()) {
+      return (
+        <Menu.Item name="statuscount">
+          <Link to="/equipment/statuscount">Status Count</Link>
         </Menu.Item>
       )
     }
@@ -140,6 +125,14 @@ export default class App extends Component<AppProps, AppState> {
           exact
           render={props => {
             return <EditEquipment {...props} auth={this.props.auth} />
+          }}
+        />
+
+        <Route
+          path="/equipment/statuscount"
+          exact
+          render={props => {
+            return <EquipmentStatusCount {...props} auth={this.props.auth} />
           }}
         />
 
