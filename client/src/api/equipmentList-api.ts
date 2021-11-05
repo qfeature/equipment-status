@@ -4,6 +4,7 @@ import { CreateEquipmentRequest } from '../types/CreateEquipmentRequest';
 import Axios from 'axios'
 import { UpdateEquipmentRequest } from '../types/UpdateEquipmentRequest';
 import { StatusCount } from '../types/StatusCount'
+import { FileHistory } from '../types/FileHistory'
 
 export async function getEquipmentList(idToken: string): Promise<Equipment[]> {
   console.log('Fetching Equipment List')
@@ -82,5 +83,16 @@ export async function getEquipmentStatusStats(idToken: string): Promise<StatusCo
     },
   })
   console.log('Equipment Status Count List:', response.data)
+  return response.data.items
+}
+
+export async function getFileUploadHistory(idToken: string, equipmentId: string): Promise<FileHistory[]> {
+  const response = await Axios.get(`${apiEndpoint}/equipment/filehistory/${equipmentId}`, {
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${idToken}`
+    },
+  })
+  console.log('File upload history:', response.data)
   return response.data.items
 }

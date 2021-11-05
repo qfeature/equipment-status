@@ -4,7 +4,6 @@ import { History } from 'history'
 import * as React from 'react'
 import {
   Button,
-  //Checkbox,
   Divider,
   Grid,
   Header,
@@ -13,12 +12,15 @@ import {
   Image,
   Loader,
   Dropdown,
-  Label
+  Label,
+  Accordion,
+  Table
 } from 'semantic-ui-react'
 
-import { createEquipment, deleteEquipment, getEquipmentList } from '../api/equipmentList-api'
+import { createEquipment, deleteEquipment, getEquipmentList, getFileUploadHistory } from '../api/equipmentList-api'
 import Auth from '../auth/Auth'
 import { Equipment } from '../types/Equipment'
+import { FileHistory } from '../types/FileHistory'
 
 interface EquipmentListProps {
   auth: Auth
@@ -30,6 +32,8 @@ interface EquipmentListState {
   newEquipmentName: string
   newEquipmentStatus: string
   loadingEquipmentList: boolean
+  activeIndex: number // For Accordian
+  fileHistoryList: FileHistory[] // For Accordian
 }
 
 export class EquipmentList extends React.PureComponent<EquipmentListProps, EquipmentListState> {
@@ -37,7 +41,9 @@ export class EquipmentList extends React.PureComponent<EquipmentListProps, Equip
     equipmentList: [],
     newEquipmentName: '',
     newEquipmentStatus: 'Up',
-    loadingEquipmentList: true
+    loadingEquipmentList: true,
+    activeIndex: -1 , // For Accordian
+    fileHistoryList: [] // For Accordian
   }
 
   handleNameChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -45,7 +51,7 @@ export class EquipmentList extends React.PureComponent<EquipmentListProps, Equip
   }
 
   handleStatusChange = (event: any, data: any) => {
-  this.setState({ newEquipmentStatus: data.value})
+    this.setState({ newEquipmentStatus: data.value})
   }
 
   onAttachButtonClick = (equipmentId: string) => {
@@ -88,23 +94,22 @@ export class EquipmentList extends React.PureComponent<EquipmentListProps, Equip
     }
   }
 
-  //onEquipmentCheck = async (pos: number) => {
-    // try {
-    //   const equipment = this.state.equipmentList[pos]
-    //   await patchEquipment(this.props.auth.getIdToken(), equipment.equipmentId, {
-    //     name: equipment.name,
-    //     statusChangedAt: equipment.statusChangedAt,
-    //     status: equipment.status //!equipment.status
-    //   })
-    //   this.setState({
-    //     equipmentList: update(this.state.equipmentList, {
-    //       [pos]: { done: { $set: !equipment.done } }
-    //     })
-    //   })
-    // } catch {
-    //   alert('Equipment deletion failed')
-    // }
-  //}
+  handleAccordionClick = async (pos: number) => {
+    try {
+      const index = pos
+      const activeIndex = this.state.activeIndex
+      const newIndex = activeIndex === index ? -1 : index
+      const equipment = this.state.equipmentList[pos]
+      const equipmentId = equipment.equipmentId
+      const fileHistory = await getFileUploadHistory(this.props.auth.getIdToken(), equipmentId)
+      this.setState({
+        activeIndex: newIndex,
+        fileHistoryList: fileHistory
+      })
+    } catch {
+      alert('Get file upload history failed')
+    }
+  }
 
   async componentDidMount() {
     try {
@@ -215,15 +220,9 @@ export class EquipmentList extends React.PureComponent<EquipmentListProps, Equip
         </Grid.Column>
 
         {this.state.equipmentList.map((equipment, pos) => {
+          const activeIndex = this.state.activeIndex
           return (
             <Grid.Row key={equipment.equipmentId}>
-              {/* <Grid.Column width={1} verticalAlign="middle">
-                <Checkbox
-                  onChange={() => this.onEquipmentCheck(pos)}
-                  checked={equipment.done}
-                />
-              </Grid.Column> */}
-
               <Grid.Column width={6} verticalAlign="middle">
                 {equipment.name}
               </Grid.Column>
@@ -267,6 +266,48 @@ export class EquipmentList extends React.PureComponent<EquipmentListProps, Equip
                 <Image src={equipment.attachmentUrl} size="small" wrapped />
               )}
 
+              {equipment.attachmentUrl && (
+                <Grid.Column width={16}>
+                  <Accordion fluid>
+                    <Accordion.Title
+                      active={activeIndex === pos}
+                      index={pos}
+                      onClick={() => this.handleAccordionClick(pos)}
+                    >
+                      <Icon name='dropdown' /> File upload history
+                    </Accordion.Title>
+
+                    <Accordion.Content active={activeIndex === pos}>
+                      <Table>
+                        <Table.Header>
+                          <Table.Row>
+                            <Table.HeaderCell>Event Name</Table.HeaderCell>
+                            <Table.HeaderCell>Event Time</Table.HeaderCell>
+                            <Table.HeaderCell>File Size</Table.HeaderCell>
+                            <Table.HeaderCell>File Etag</Table.HeaderCell>
+                          </Table.Row>
+                        </Table.Header>
+
+                        <Table.Body>
+                        {
+                          this.state.fileHistoryList.map((fileHist, pos2) => {
+                            return (
+                              <Table.Row key={pos2}>
+                                <Table.Cell>{fileHist.eventName}</Table.Cell>
+                                <Table.Cell>{this.formatStatusDate(fileHist.eventTime)}</Table.Cell>
+                                <Table.Cell>{fileHist.fileSize}</Table.Cell>
+                                <Table.Cell>{fileHist.fileEtag}</Table.Cell>
+                              </Table.Row>
+                            )
+                          })
+                        }
+                        </Table.Body>
+                      </Table>
+                    </Accordion.Content>
+                  </Accordion>
+                </Grid.Column>
+              )}
+
               <Grid.Column width={16}>
                 <Divider />
               </Grid.Column>
@@ -275,13 +316,6 @@ export class EquipmentList extends React.PureComponent<EquipmentListProps, Equip
         })}
       </Grid>
     )
-  }
-
-  calculateDueDate(): string {
-    const date = new Date()
-    date.setDate(date.getDate() + 7)
-
-    return dateFormat(date, 'yyyy-mm-dd') as string
   }
 
   formatStatusDate(statusChangedAt: string): string {
