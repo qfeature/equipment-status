@@ -86,12 +86,16 @@ export class EquipmentAccess {
     async updateEquipmentUrl(userId: string, equipmentId: string) {
         logger.info(`Updating an equipment URL for equipmentId ${equipmentId} with userId ${userId}`)
 
+        // Append time to image URL to prevent Browser from caching image
+        // when a new image is expected to be uploaded.
+        const milliseconds = new Date().getTime(); // time since the epoch
+
         await this.docClient.update({
             TableName: this.eqTable,
             Key: {"equipmentId": equipmentId, "userId": userId},
             UpdateExpression: "SET attachmentUrl = :attachmentUrl",
             ExpressionAttributeValues: {
-                ":attachmentUrl": `https://${this.bucketName}.s3.amazonaws.com/${equipmentId}`
+                ":attachmentUrl": `https://${this.bucketName}.s3.amazonaws.com/${equipmentId}?t=${milliseconds}`
             },
             ReturnValues: "UPDATED_NEW" //"NONE"
         }).promise()

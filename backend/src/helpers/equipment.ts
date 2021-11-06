@@ -44,7 +44,7 @@ export async function updateEquipment(userId: string, equipmentId: string, updat
         equipmentId,
         {
             name: updateEquipmentRequest.name,
-            statusChangedAt: updateEquipmentRequest.statusChangedAt,
+            statusChangedAt: new Date().toISOString(),
             status: updateEquipmentRequest.status 
         }
     )
@@ -69,6 +69,8 @@ export async function createAttachmentPresignedUrl(userId: string, equipmentId: 
     // get a presigned URL
     const attachmentUtils = new AttachmentUtils()
     const signedUrl = await attachmentUtils.getUploadUrl(equipmentId);
+
+    logger.info('The presigned URL', {signedUrl: signedUrl})
 
     return signedUrl
 }

@@ -5,7 +5,8 @@
     "properties": {
       "name": {
         "type": "string",
-        "minLength": 1
+        "minLength": 1,
+        "maxLength": 100
       },
       "status": {
         "type": "string",
@@ -17,5 +18,4 @@
       "status"
     ],
     "additionalProperties": false
-  }
-  
+}

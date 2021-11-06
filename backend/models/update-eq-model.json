@@ -5,10 +5,8 @@
     "properties": {
       "name": {
         "type": "string",
-        "minLength": 1
-      },
-      "statusChangedAt": {
-        "type": "string"
+        "minLength": 1,
+        "maxLength": 100
       },
       "status": {
         "type": "string",
@@ -17,9 +15,7 @@
     },
     "required": [
       "name",
-      "statusChangedAt",
       "status"
     ],
     "additionalProperties": false
-  }
-  
+}
