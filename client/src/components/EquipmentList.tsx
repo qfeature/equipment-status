@@ -21,6 +21,7 @@ import { createEquipment, deleteEquipment, getEquipmentList, getFileUploadHistor
 import Auth from '../auth/Auth'
 import { Equipment } from '../types/Equipment'
 import { FileHistory } from '../types/FileHistory'
+import Swal from 'sweetalert2' // For alert messages
 
 interface EquipmentListProps {
   auth: Auth
@@ -77,9 +78,22 @@ export class EquipmentList extends React.PureComponent<EquipmentListProps, Equip
         newEquipmentName: '',
         newEquipmentStatus: 'Up'
       })
-      alert('Equipment created!')
-    } catch {
-      alert('Equipment creation failed. Make sure to provide an equipment name and select a status to create an equipment.')
+
+      // alert
+      Swal.fire({
+        position: 'center',
+        icon: 'success',
+        title: 'Equipment created!',
+        showConfirmButton: true
+      })
+    } catch (e) {
+      // alert
+      Swal.fire({
+        position: 'center',
+        icon: 'error',
+        title: 'Could not create equipment. Make sure equipment name is between 1 - 100 characters and a status is selected.',
+        showConfirmButton: true
+      })
     }
   }
 
@@ -89,13 +103,26 @@ export class EquipmentList extends React.PureComponent<EquipmentListProps, Equip
       this.setState({
         equipmentList: this.state.equipmentList.filter(equipment => equipment.equipmentId !== equipmentId)
       })
-      alert('Equipment deleted!')
-    } catch {
-      alert('Equipment deletion failed')
+
+      // alert
+      Swal.fire({
+        position: 'center',
+        icon: 'success',
+        title: 'Equipment deleted!',
+        showConfirmButton: true
+      })
+    } catch (e) {
+      // alert
+      Swal.fire({
+        position: 'center',
+        icon: 'error',
+        title: 'Could not delete equipment',
+        showConfirmButton: true
+      })
     }
   }
 
-  handleAccordionClick = async (pos: number) => {
+  onShowFileUploadHistoryClick = async (pos: number) => {
     try {
       const index = pos
       const activeIndex = this.state.activeIndex
@@ -107,8 +134,14 @@ export class EquipmentList extends React.PureComponent<EquipmentListProps, Equip
         activeIndex: newIndex,
         fileHistoryList: fileHistory
       })
-    } catch {
-      alert('Get file upload history failed')
+    } catch (e) {
+      // alert
+      Swal.fire({
+        position: 'center',
+        icon: 'error',
+        title: 'Could not get file upload history',
+        showConfirmButton: true
+      })
     }
   }
 
@@ -120,7 +153,13 @@ export class EquipmentList extends React.PureComponent<EquipmentListProps, Equip
         loadingEquipmentList: false
       })
     } catch (e) {
-      alert(`Failed to fetch equipment list: ` + JSON.stringify(e))
+      // alert
+      Swal.fire({
+        position: 'center',
+        icon: 'error',
+        title: 'Unable to fetch equipment list',
+        showConfirmButton: true
+      })
     }
   }
 
@@ -162,6 +201,7 @@ export class EquipmentList extends React.PureComponent<EquipmentListProps, Equip
               placeholder="Select an equipment status"
               fluid
               selection
+              value={this.state.newEquipmentStatus}
               onChange={this.handleStatusChange}
               options={[{key: 'Up', value: 'Up', text: 'Up'},
                 {key: 'Down', value: 'Down', text: 'Down'},
@@ -273,7 +313,7 @@ export class EquipmentList extends React.PureComponent<EquipmentListProps, Equip
                     <Accordion.Title
                       active={activeIndex === pos}
                       index={pos}
-                      onClick={() => this.handleAccordionClick(pos)}
+                      onClick={() => this.onShowFileUploadHistoryClick(pos)}
                     >
                       <Icon name='dropdown' /> <strong>File upload history</strong>
                     </Accordion.Title>

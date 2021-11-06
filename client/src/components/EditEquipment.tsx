@@ -3,6 +3,7 @@ import { Form, Button, Dropdown, Grid, Segment, Divider} from 'semantic-ui-react
 import Auth from '../auth/Auth'
 import { updateEquipment } from '../api/equipmentList-api'
 import { History } from 'history'
+import Swal from 'sweetalert2'
 
 interface EditEquipmentProps {
   match: {
@@ -43,10 +44,21 @@ export class EditEquipment extends React.PureComponent<EditEquipmentProps,EditEq
          this.props.match.params.equipmentId,
          {name: newName, status: newStatus})
 
-      alert('Status changed!')
+      // alert
+      Swal.fire({
+        position: 'center',
+        icon: 'success',
+        title: 'Status changed!',
+        showConfirmButton: true
+      })
     } catch (e) {
-      alert('Could not change status')
-      console.log('Could not change status. ' + JSON.stringify(e))
+      // alert
+      Swal.fire({
+        position: 'center',
+        icon: 'error',
+        title: 'Could not change status',
+        showConfirmButton: true
+      })
     }
   }
 

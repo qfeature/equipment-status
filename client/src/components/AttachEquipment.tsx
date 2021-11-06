@@ -2,6 +2,7 @@ import * as React from 'react'
 import { Form, Button } from 'semantic-ui-react'
 import Auth from '../auth/Auth'
 import { getUploadUrl, uploadFile } from '../api/equipmentList-api'
+import Swal from 'sweetalert2' // For alert messages
 
 enum UploadState {
   NoUpload,
@@ -46,7 +47,14 @@ export class AttachEquipment extends React.PureComponent<
 
     try {
       if (!this.state.file) {
-        alert('File should be selected')
+        // alert
+        Swal.fire({
+          position: 'center',
+          icon: 'warning',
+          title: 'File should be selected',
+          showConfirmButton: true
+        })
+
         return
       }
 
@@ -56,9 +64,22 @@ export class AttachEquipment extends React.PureComponent<
       this.setUploadState(UploadState.UploadingFile)
       await uploadFile(uploadUrl, this.state.file)
 
-      alert('File was uploaded!')
+      // alert
+      Swal.fire({
+        position: 'center',
+        icon: 'success',
+        title: 'File was uploaded!',
+        showConfirmButton: true
+      })
     } catch (e) {
-      alert('Could not upload a file: ' + JSON.stringify(e))
+      // alert
+      Swal.fire({
+        position: 'center',
+        icon: 'error',
+        title: 'Could not upload a file',
+        showConfirmButton: true
+      })
+      console.log('Could not upload a file: ' + JSON.stringify(e))
     } finally {
       this.setUploadState(UploadState.NoUpload)
     }

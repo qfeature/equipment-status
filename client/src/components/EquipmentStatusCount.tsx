@@ -12,6 +12,7 @@ import {
 import { getEquipmentStatusStats } from '../api/equipmentList-api'
 import Auth from '../auth/Auth'
 import { StatusCount } from '../types/StatusCount'
+import Swal from 'sweetalert2'
 
 interface StatusCountListProps {
   auth: Auth
@@ -37,7 +38,13 @@ export class EquipmentStatusCount extends React.PureComponent<StatusCountListPro
          loadingStatusCountList: false
       })
     } catch (e) {
-      alert("Failed to fetch status count list: " + JSON.stringify(e))
+      // alert
+      Swal.fire({
+        position: 'center',
+        icon: 'error',
+        title: 'Could not fetch status count list',
+        showConfirmButton: true
+      })
     }
   }
 
