@@ -7,8 +7,6 @@ import { StatusCount } from '../types/StatusCount'
 import { FileHistory } from '../types/FileHistory'
 
 export async function getEquipmentList(idToken: string): Promise<Equipment[]> {
-  console.log('Fetching Equipment List')
-
   const response = await Axios.get(`${apiEndpoint}/equipment`, {
     headers: {
       'Content-Type': 'application/json',
@@ -75,7 +73,6 @@ export async function uploadFile(uploadUrl: string, file: Buffer): Promise<void>
 }
 
 export async function getEquipmentStatusStats(idToken: string): Promise<StatusCount[]> {
-  console.log('Fetching Status Count List')
   const response = await Axios.get(`${apiEndpoint}/equipment/statuscount`, {
     headers: {
       'Content-Type': 'application/json',

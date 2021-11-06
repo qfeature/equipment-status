@@ -99,7 +99,7 @@ renderStatusCountList() {
               </Grid.Column>
 
               <Grid.Column width={6} verticalAlign="middle">
-                {this.formatStatusDate(statusCount.updatedAt)}
+                {dateFormat(statusCount.updatedAt, 'yyyy-mm-dd HH:MM:ss')}
               </Grid.Column>
 
             </Grid.Row>
@@ -109,29 +109,12 @@ renderStatusCountList() {
     )
   }
 
-  formatStatusDate(statusChangedAt: string): string {
-    return dateFormat(statusChangedAt, 'yyyy-mm-dd HH:MM:ss') as string
-  }
-
-  getStatusColor(status: string): string {
-    let statusColor = ''
-    if ('Up' === status) {
-      statusColor = 'green'
-    } else if ('Down' === status) {
-      statusColor = 'red'
-    } else if ('Limited' === status) {
-      statusColor = 'orange'
-    }
-    return statusColor
-  }
-
   formatStatusLabel(status: string) {
-    let statusColor = this.getStatusColor(status)
-    if ('green' === statusColor)
+    if ('Up' === status)
       return (<Label color="green">{status}</Label>)
-    else if ('red' === statusColor)
+    else if ('Down' === status)
       return (<Label color="red">{status}</Label>)
-    else if ('orange' === statusColor)
+    else if ('Limited' === status)
       return (<Label color="orange">{status}</Label>)
     else
       return (<Label>{status}</Label>)

@@ -89,6 +89,7 @@ export class EquipmentList extends React.PureComponent<EquipmentListProps, Equip
       this.setState({
         equipmentList: this.state.equipmentList.filter(equipment => equipment.equipmentId !== equipmentId)
       })
+      alert('Equipment deleted!')
     } catch {
       alert('Equipment deletion failed')
     }
@@ -224,15 +225,15 @@ export class EquipmentList extends React.PureComponent<EquipmentListProps, Equip
           return (
             <Grid.Row key={equipment.equipmentId}>
               <Grid.Column width={6} verticalAlign="middle">
-                {equipment.name}
+                <h4>{equipment.name}</h4>
               </Grid.Column>
 
               <Grid.Column width={3} verticalAlign="middle">
                 {this.formatStatusLabel(equipment.status)}
               </Grid.Column>
 
-              <Grid.Column width={4}>
-                {this.formatStatusDate(equipment.statusChangedAt)}
+              <Grid.Column width={4} verticalAlign="middle">
+                {dateFormat(equipment.statusChangedAt, 'yyyy-mm-dd HH:MM:ss')}
               </Grid.Column>
 
               <Grid.Column width={1} floated="right">
@@ -274,7 +275,7 @@ export class EquipmentList extends React.PureComponent<EquipmentListProps, Equip
                       index={pos}
                       onClick={() => this.handleAccordionClick(pos)}
                     >
-                      <Icon name='dropdown' /> File upload history
+                      <Icon name='dropdown' /> <strong>File upload history</strong>
                     </Accordion.Title>
 
                     <Accordion.Content active={activeIndex === pos}>
@@ -294,7 +295,7 @@ export class EquipmentList extends React.PureComponent<EquipmentListProps, Equip
                             return (
                               <Table.Row key={pos2}>
                                 <Table.Cell>{fileHist.eventName}</Table.Cell>
-                                <Table.Cell>{this.formatStatusDate(fileHist.eventTime)}</Table.Cell>
+                                <Table.Cell>{dateFormat(fileHist.eventTime, 'yyyy-mm-dd HH:MM:ss')}</Table.Cell>
                                 <Table.Cell>{fileHist.fileSize}</Table.Cell>
                                 <Table.Cell>{fileHist.fileEtag}</Table.Cell>
                               </Table.Row>
@@ -318,31 +319,15 @@ export class EquipmentList extends React.PureComponent<EquipmentListProps, Equip
     )
   }
 
-  formatStatusDate(statusChangedAt: string): string {
-    return dateFormat(statusChangedAt, 'yyyy-mm-dd HH:MM:ss') as string
-  }
-
-  getStatusColor(status: string): string {
-    let statusColor = ''
-    if ('Up' === status) {
-      statusColor = 'green'
-    } else if ('Down' === status) {
-      statusColor = 'red'
-    } else if ('Limited' === status) {
-      statusColor = 'orange'
-    }
-    return statusColor
-  }
-
   formatStatusLabel(status: string) {
-    let statusColor = this.getStatusColor(status)
-    if ('green' === statusColor)
+    if ('Up' === status)
       return (<Label color="green">{status}</Label>)
-    else if ('red' === statusColor)
+    else if ('Down' === status)
       return (<Label color="red">{status}</Label>)
-    else if ('orange' === statusColor)
+    else if ('Limited' === status)
       return (<Label color="orange">{status}</Label>)
     else
       return (<Label>{status}</Label>)
   }
+
 }
