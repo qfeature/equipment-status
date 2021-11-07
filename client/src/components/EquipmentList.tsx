@@ -208,9 +208,9 @@ export class EquipmentList extends React.PureComponent<EquipmentListProps, Equip
                 {key: 'Limited', value: 'Limited', text: 'Limited'}]} />
           </Grid.Column>
 
-          <Grid.Column width={16}>
+          {/* <Grid.Column width={16}>
             <Divider />
-          </Grid.Column>
+          </Grid.Column> */}
         </Grid.Row>
       </Grid>
     )
@@ -237,6 +237,8 @@ export class EquipmentList extends React.PureComponent<EquipmentListProps, Equip
   renderEquipmentItems() {
     return (
       <Grid padded>
+        {(this.state.equipmentList.length <= 0) ? null: 
+        <Grid.Row>
         <Grid.Column width={6}>
           <h3>Equipment Name</h3>
         </Grid.Column>
@@ -259,6 +261,8 @@ export class EquipmentList extends React.PureComponent<EquipmentListProps, Equip
         <Grid.Column width={16}>
           <Divider />
         </Grid.Column>
+        </Grid.Row>
+        }
 
         {this.state.equipmentList.map((equipment, pos) => {
           const activeIndex = this.state.activeIndex
@@ -369,5 +373,4 @@ export class EquipmentList extends React.PureComponent<EquipmentListProps, Equip
     else
       return (<Label>{status}</Label>)
   }
-
 }
