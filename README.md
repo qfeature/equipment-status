@@ -17,7 +17,11 @@ This application allows you to manage your industry equipment and their status. 
 
 # Backend
 
-The source code for the API is in the **`backend`** folder.
+The source code for the API is in the **`backend`** folder. The Serverless application was created using the following command:
+
+> **`sls create --template aws-nodejs-typescript --path backend --name serverless-equipment-status-app`**
+
+Additional files were added to implement the API for Equipment Status application.
 
 * The **serverless.yml** file is used to provision all the resources in AWS used by the application.
 
@@ -159,6 +163,11 @@ Additional files were added to interact with the Equipment Status backend API.
 ## Navigating the User Interface
 
 When the React UI is first started, click the green **Log in** button or the one in the navigation bar to log into the application.
+<kbd>
+![UI Homepage](screenshots/ui/1-Login.png?raw=true "UI Homepage")
+</kbd>
+
+Refer to folder `screenshots\ui` for examples of navigating the application UI.
 
 # How to run the application
 
@@ -186,9 +195,12 @@ This should start a development server with the React application that will inte
 
 # Postman collection
 
-An alternative way to test the backend API, you can use the Postman collection that contains sample requests. You can find a Postman collection file in this project called **Equipment Status.postman_collection.json**. Use Postman to import this file if you need to test the backend API endpoint using Postman instead of the provided frontend React client application provided with this project.
+An alternative way to test the backend API, you can use the Postman collection that contains sample requests. You can find a Postman collection file in this project called **Equipment Status.postman_collection.json**. Use Postman to import this file if you need to test the backend API endpoint using Postman instead of the provided frontend React client application provided with this project. Refer to folder `screenshots\postman` for example of import.
+<kbd>
+![Postman Collection](screenshots/postman/4-Collection%20as%20shown%20in%20Postman%20after%20imported.png?raw=true "Postman Collection")
+</kbd>
 
 1. Start the Postman application
-1. Import the collection `Equipment Status.postman_collection.json`
+1. Import the collection `Equipment Status.postman_collection.json`.
 1. Edit the environment variables in the collection and enter in the appropriate value for the `apiId` and `authToken`.
 1. Provide request input as appropriate to test the requests.
