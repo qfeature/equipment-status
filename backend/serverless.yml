@@ -11,6 +11,10 @@ plugins:
   - serverless-aws-documentation # For validating requests
   - serverless-iam-roles-per-function
 
+# Create separate zip package for each lambda function when deploying.
+package:
+  individually: true
+
 provider:
   # Enabling XRay tracing
   tracing:
